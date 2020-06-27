@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2018/09/16 13:04:05.000.097,=C:\Users\Cassio\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2018/09/16 13:05:02.000.429,=C:\Users\Cassio\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2018/09/19 19:30:38.000.851,=C:\Users\Cassio\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2019/05/22 12:10:35.000.113,=D:\Usuario\i7\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2019/05/24 14:15:10.000.067,=D:\Usuario\i7\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/03/14 14:36:37.000.189,=D:\Usuario\i7\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/06/23 20:26:36.000.543,=D:\Usuario\i7\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/06/23 20:57:04.000.155,=D:\Usuario\i7\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2020/06/23 21:01:45.000.751,D:\Delphi\Git\CRUD\Unit\udmConexao.pas=D:\Usuario\i7\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2020/06/23 21:01:45.000.751,D:\Delphi\Git\CRUD\Unit\udmConexao.dfm=D:\Usuario\i7\Documents\Embarcadero\Studio\Projects\Unit2.dfm</Transaction>
+    <Transaction>2020/06/23 21:01:56.000.356,D:\Delphi\Git\CRUD\Unit\ufrmCRUD.pas=D:\Usuario\i7\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/06/23 21:01:56.000.356,D:\Delphi\Git\CRUD\Unit\ufrmCRUD.dfm=D:\Usuario\i7\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>2020/06/23 21:02:07.000.897,D:\Delphi\Git\CRUD\CRUD.dproj=D:\Usuario\i7\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2020/06/23 22:48:30.000.535,=D:\Delphi\Global\Helper\Lemonade.Helpers.TDataSetHelper.pas</Transaction>
+    <Transaction>2020/06/23 22:50:53.000.157,=D:\Delphi\Global\Funcoes\Lemonade.Control.Components.pas</Transaction>
+    <Transaction>2020/06/24 00:55:33.000.731,=D:\Delphi\Global\Helper\Lemonade.Helpers.StringHelper.pas</Transaction>
+    <Transaction>2020/06/24 00:55:56.000.842,=D:\Delphi\Global\Funcoes\Lemonade.Types.pas</Transaction>
+    <Transaction>2020/06/24 00:56:19.000.762,=D:\Delphi\Global\Funcoes\Lemonade.Funcoes.Globais.pas</Transaction>
+    <Transaction>2020/06/24 00:58:33.000.502,=D:\Delphi\Projetos\Fabrica\Win32\Debug\bin\DLL\DllInscE32.dll</Transaction>
+    <Transaction>2020/06/25 23:09:20.600,=D:\Delphi\Global\Helper\Lemonade.Helpers.TFieldHelper.pas</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<NoProfile iOSSimulator="iPhone5" Android="Cel"/>
+	</ActiveMobileDevice>
+</BorlandProject>

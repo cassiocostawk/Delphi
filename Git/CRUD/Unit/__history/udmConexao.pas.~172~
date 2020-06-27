@@ -1,0 +1,384 @@
+unit udmConexao;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
+  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.FBDef, FireDAC.VCLUI.Wait, FireDAC.Comp.UI, FireDAC.Phys.IBBase, FireDAC.Phys.FB,
+  Data.DB, FireDAC.Comp.Client, Vcl.Forms, FireDAC.Comp.ScriptCommands, FireDAC.Stan.Util, FireDAC.Comp.Script, FireDAC.Stan.Param, FireDAC.DatS,
+  FireDAC.DApt.Intf, FireDAC.DApt, FireDAC.Comp.DataSet, Vcl.Dialogs, Winapi.Windows, Lemonade.Helpers.StringHelper, FireDAC.Stan.ExprFuncs,
+  FireDAC.Phys.SQLiteDef, FireDAC.Phys.SQLite, System.StrUtils;
+
+type
+  TdmConexao = class(TDataModule)
+    FDConnection: TFDConnection;
+    FBDriver: TFDPhysFBDriverLink;
+    FDCursor: TFDGUIxWaitCursor;
+    scrMeta: TFDScript;
+    cdsCad: TFDQuery;
+    cdsDetail: TFDQuery;
+    cdsCadID: TIntegerField;
+    cdsCadTIPO: TStringField;
+    cdsCadCNPJ_CPF: TStringField;
+    cdsCadIE_RG: TStringField;
+    cdsCadINSC_MUNICIPAL: TStringField;
+    cdsCadNOME: TStringField;
+    cdsCadNOME_FANTASIA: TStringField;
+    cdsCadENDERECO: TStringField;
+    cdsCadEND_NUMERO: TStringField;
+    cdsCadEND_COMPLEMENTO: TStringField;
+    cdsCadBAIRRO: TStringField;
+    cdsCadFK_UF: TIntegerField;
+    cdsCadFK_CIDADE: TIntegerField;
+    cdsCadCEP: TIntegerField;
+    cdsCadFK_PAIS: TIntegerField;
+    cdsCadDATA_CADASTRO: TDateField;
+    cdsCadSITE: TStringField;
+    cdsCadOBS: TMemoField;
+    cdsCadINATIVO: TIntegerField;
+    cdsCadBLOQUEADO: TIntegerField;
+    cdsDetailID: TIntegerField;
+    cdsDetailNOME: TStringField;
+    cdsDetailEMAIL: TStringField;
+    cdsDetailTELEFONE: TStringField;
+    cdsDetailINATIVO: TIntegerField;
+    cdsDetailFK_PESSOA: TIntegerField;
+    cdsCidade: TFDQuery;
+    cdsUF: TFDQuery;
+    cdsPais: TFDQuery;
+    cdsPaisID: TIntegerField;
+    cdsPaisNOME: TStringField;
+    cdsPaisDATA_INICIO: TDateField;
+    cdsPaisDATA_FIM: TDateField;
+    cdsPaisINATIVO: TSmallintField;
+    cdsUFID: TIntegerField;
+    cdsUFSIGLA: TStringField;
+    cdsUFNOME: TStringField;
+    cdsCidadeID: TIntegerField;
+    cdsCidadeFK_UF: TIntegerField;
+    cdsCidadeNOME: TStringField;
+    cdsCidadeMESOREGIAO_ID: TIntegerField;
+    cdsCidadeMESOREGIAO_NOME: TStringField;
+    cdsCidadeMICROREGIAO_ID: TIntegerField;
+    cdsCidadeMICROREGIAL_NOME: TStringField;
+    cdsCidadeINATIVO: TIntegerField;
+    dsUF: TDataSource;
+    scrUF: TFDScript;
+    scrPais: TFDScript;
+    scrCidades: TFDScript;
+    FDSQLite: TFDPhysSQLiteDriverLink;
+    dsCad: TDataSource;
+    procedure DataModuleCreate(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);
+    procedure cdsCadAfterPost(DataSet: TDataSet);
+    procedure cdsCadAfterDelete(DataSet: TDataSet);
+    procedure cdsCadNewRecord(DataSet: TDataSet);
+    procedure cdsCadIE_RGValidate(Sender: TField);
+    procedure cdsCadCNPJ_CPFValidate(Sender: TField);
+    procedure cdsCadAfterOpen(DataSet: TDataSet);
+    procedure cdsDetailTELEFONEChange(Sender: TField);
+    procedure cdsDetailNewRecord(DataSet: TDataSet);
+    procedure cdsCadPostError(DataSet: TDataSet; E: EDatabaseError; var Action: TDataAction);
+    procedure cdsCadReconcileError(DataSet: TFDDataSet; E: EFDException; UpdateKind: TFDDatSRowState; var Action: TFDDAptReconcileAction);
+    procedure cdsDetailReconcileError(DataSet: TFDDataSet; E: EFDException; UpdateKind: TFDDatSRowState; var Action: TFDDAptReconcileAction);
+    procedure cdsDetailPostError(DataSet: TDataSet; E: EDatabaseError; var Action: TDataAction);
+  private
+    sqlCad    : WideString;
+    function GetID(sTable : string) : Integer;
+    function Validar(var cds : TFDQuery) : string;
+    { Private declarations }
+  public
+    procedure Filtrar(Nome, NomeFantasia, Bairro, Cidade : string);
+    procedure ValoresDefault;
+    { Public declarations }
+  end;
+
+var
+  dmConexao: TdmConexao;
+
+implementation
+
+uses
+  Lemonade.Helpers.TDataSetHelper;
+
+{%CLASSGROUP 'Vcl.Controls.TControl'}
+
+{$R *.dfm}
+
+procedure TdmConexao.cdsCadAfterDelete(DataSet: TDataSet);
+begin
+  cdsCad.ApplyUpdates(0);
+end;
+
+procedure TdmConexao.cdsCadAfterOpen(DataSet: TDataSet);
+begin
+  cdsCadCNPJ_CPFValidate(cdsCadCNPJ_CPF);
+  //cdsCadIE_RGValidate(cdsCadIE_RG);
+  cdsDetailTELEFONEChange(cdsDetailTELEFONE);
+end;
+
+procedure TdmConexao.cdsCadAfterPost(DataSet: TDataSet);
+begin
+  if cdsCad.ApplyUpdates(0) = 0 then
+    if cdsDetail.ApplyUpdates(0) > 0 then
+      ShowMessage('Salvo com erros.');
+
+  cdsCad.Close;
+  cdsCad.Open;
+
+  cdsDetail.Close;
+  cdsDetail.Open;
+end;
+
+procedure TdmConexao.cdsCadCNPJ_CPFValidate(Sender: TField);
+begin
+  if (cdsCadCNPJ_CPF.AsString.IsValidCNPJ) or (cdsCadCNPJ_CPF.AsString.IsValidCPF) then
+    cdsCadCNPJ_CPF.ConstraintErrorMessage := EmptyStr
+  else
+    cdsCadCNPJ_CPF.ConstraintErrorMessage := cdsCadCNPJ_CPF.DisplayLabel + ' inválido.';
+
+  cdsCadCNPJ_CPF.EditMask := cdsCadCNPJ_CPF.AsString.CNPJCPFMask;
+end;
+
+procedure TdmConexao.cdsCadIE_RGValidate(Sender: TField);
+begin
+  {if (cdsCadTIPO.AsString = 'J') and
+     (cdsCadIE_RG.AsString.LengthStr > 0) and
+     (not cdsCadIE_RG.AsString.IsValidIE(cdsUFNOME.AsString)) then
+    cdsCadIE_RG.ConstraintErrorMessage := cdsCadIE_RG.DisplayLabel + ' inválido.'
+  else
+    cdsCadIE_RG.ConstraintErrorMessage := EmptyStr;}
+end;
+
+procedure TdmConexao.cdsCadNewRecord(DataSet: TDataSet);
+begin
+  cdsCadTIPO.AsString := 'J';
+  cdsCadID.AsInteger := GetID('PESSOA');
+end;
+
+procedure TdmConexao.cdsCadPostError(DataSet: TDataSet; E: EDatabaseError; var Action: TDataAction);
+begin
+  ShowMessage('Erro ao salvar as alterações.' + sLineBreak + e.Message);
+end;
+
+procedure TdmConexao.cdsCadReconcileError(DataSet: TFDDataSet; E: EFDException; UpdateKind: TFDDatSRowState; var Action: TFDDAptReconcileAction);
+begin
+  ShowMessage('Erro ao aplicar as alterações.' + sLineBreak + e.Message);
+end;
+
+procedure TdmConexao.cdsDetailNewRecord(DataSet: TDataSet);
+begin
+  cdsDetailID.AsInteger        := GetID('PESSOA_CONTATOS');
+  cdsDetailFK_PESSOA.AsInteger := cdsCadID.AsInteger;
+end;
+
+procedure TdmConexao.cdsDetailPostError(DataSet: TDataSet; E: EDatabaseError; var Action: TDataAction);
+begin
+  ShowMessage('Erro ao salvar os detalhes.' + sLineBreak + e.Message);
+end;
+
+procedure TdmConexao.cdsDetailReconcileError(DataSet: TFDDataSet; E: EFDException; UpdateKind: TFDDatSRowState; var Action: TFDDAptReconcileAction);
+begin
+  ShowMessage('Erro ao aplicar os detalhes.' + sLineBreak + e.Message);
+end;
+
+procedure TdmConexao.cdsDetailTELEFONEChange(Sender: TField);
+begin
+  cdsDetailTELEFONE.EditMask := cdsDetailTELEFONE.AsString.FoneMask;
+end;
+
+procedure TdmConexao.DataModuleCreate(Sender: TObject);
+var
+  DBCreate : Boolean;
+begin
+  try
+    DBCreate := not FileExists(ExtractFilePath(Application.ExeName) + 'Database.db');
+
+    if DBCreate then
+      FDConnection.Params.Values['CreateDatabase'] := 'Yes';
+
+    FDConnection.Params.Values['Database'] := ExtractFilePath(Application.ExeName) + 'Database.db';
+    FDConnection.Open;
+  except
+    on E : Exception do
+    begin
+      Application.MessageBox(PChar('Não foi possível criar o banco de dados.'+ sLineBreak + E.Message), 'Erro ao gerar Banco de dados', MB_ICONERROR);
+      Application.Terminate;
+    end;
+  end;
+
+  try
+    if DBCreate then
+    begin
+      if scrMeta.ExecuteAll then
+      begin
+        scrUF.ExecuteAll;
+        scrPais.ExecuteAll;
+        scrCidades.ExecuteAll;
+      end;
+    end;
+  except
+    on E :Exception do
+    begin
+      DeleteFile(PChar(ExtractFilePath(Application.ExeName) + 'Database.db'));
+      Application.MessageBox(PChar('Não foi possível criar a estrutura do banco de dados.' + sLineBreak + E.Message), 'Erro ao gerar Banco de dados', MB_ICONERROR);
+      Application.Terminate;
+    end;
+  end;
+
+  {try
+    DBCreate := not FileExists(ExtractFilePath(Application.ExeName) + 'Database.fdb');
+
+    if DBCreate then
+      FDConnection.Params.Values['CreateDatabase'] := 'Yes';
+
+    FDConnection.Params.Values['Database'] := ExtractFilePath(Application.ExeName) + 'Database.fdb';
+    FDConnection.Open;
+  except
+    on E : Exception do
+    begin
+      Application.MessageBox(PChar('Não foi possível criar o banco de dados.'+ sLineBreak + E.Message), 'Erro ao gerar Banco de dados', MB_ICONERROR);
+      Application.Terminate;
+    end;
+  end;
+
+  try
+    if DBCreate then
+    begin
+      if scrMeta.ExecuteAll then
+      begin
+        scrUF.ExecuteAll;
+        FDConnection.Commit;
+        scrPais.ExecuteAll;
+        FDConnection.Commit;
+        scrCidades.ExecuteAll;
+        FDConnection.Commit;
+      end;
+    end;
+  except
+    on E :Exception do
+    begin
+      DeleteFile(PChar(ExtractFilePath(Application.ExeName) + 'Database.fdb'));
+      Application.MessageBox(PChar('Não foi possível criar a estrutura do banco de dados.' + sLineBreak + E.Message), 'Erro ao gerar Banco de dados', MB_ICONERROR);
+      Application.Terminate;
+    end;
+  end;  }
+
+  cdsPais.Open;
+  cdsUF.Open;
+  cdsCidade.Open;
+
+  cdsCad.Open;
+  cdsDetail.Open;
+
+  sqlCad := cdsCad.SQL.Text;
+end;
+
+procedure TdmConexao.DataModuleDestroy(Sender: TObject);
+begin
+  cdsDetail.Open;
+  cdsCad.Open;
+
+  cdsCidade.Open;
+  cdsUF.Open;
+  cdsPais.Open;
+
+  FDConnection.Close;
+end;
+
+procedure TdmConexao.Filtrar(Nome, NomeFantasia, Bairro, Cidade : string);
+var
+  Filtro : string;
+begin
+  Filtro := ' WHERE 0=0';
+
+  if not Nome.IsEmpty then
+    Filtro := Filtro + ' AND PESSOA.NOME LIKE ' + QuotedStr('%'+ Nome + '%');
+
+  if not NomeFantasia.IsEmpty then
+    Filtro := Filtro + ' AND PESSOA.NOME_FANTASIA LIKE ' + QuotedStr('%'+ NomeFantasia + '%');
+
+  if not Bairro.IsEmpty then
+    Filtro := Filtro + ' AND PESSOA.BAIRRO LIKE ' + QuotedStr('%'+ Bairro + '%');
+
+  {if not Nome.IsEmpty then
+    Filtro := Filtro + ' AND PESSOA.NOME LIKE ' + QuotedStr('%'+ Nome + '%'); }
+
+
+  cdsCad.Close;
+  cdsCad.SQL.Clear;
+  cdsCad.SQL.Text := sqlCad + Filtro;
+  cdsCad.Open;
+end;
+
+function TdmConexao.GetID(sTable: string): Integer;
+begin
+  with TFDQuery.Create(nil) do
+  try
+    Connection := FDConnection;
+    SQL.Clear;
+    SQL.Text := 'select seq from sqlite_sequence where name=' + QuotedStr(sTable);
+    Open;
+
+    Result := IfThen(IsEmpty, '0', FieldByName('seq').AsString).ToInteger + 1;
+  finally
+    Close;
+    Free;
+  end;
+end;
+
+function TdmConexao.Validar(var cds: TFDQuery): string;
+var
+  I: Integer;
+begin
+  Result := '';
+
+  with cds do
+  begin
+    for I := 0 to Pred(Fields.Count) do
+    begin
+      if Fields[I].Required then
+      begin
+        case Fields[I].DataType of
+          ftString   : if cds.Fields[I].IsEmpty then Result := Fields[I].DisplayName + sLineBreak;
+          ftInteger  : if cds.Fields[I].IsNull  then Result := Fields[I].DisplayName + sLineBreak;
+          ftCurrency : if cds.Fields[I].IsNull  then Result := Fields[I].DisplayName + sLineBreak;
+        else
+          if cds.Fields[I].IsNull then Result := Fields[I].DisplayName + sLineBreak;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TdmConexao.ValoresDefault;
+begin
+  if (cdsCad.State in [dsInsert]) and (cdsDetail.State in [dsBrowse]) then
+  begin
+    cdsCadTIPO.AsString            := 'F';
+    cdsCadCNPJ_CPF.AsString        := '12345678909';
+    cdsCadIE_RG.AsString           := cdsCadID.AsString + cdsCadID.AsString + cdsCadID.AsString;
+    cdsCadINSC_MUNICIPAL.AsString  := cdsCadID.AsString + cdsCadID.AsString + cdsCadID.AsString;
+    cdsCadNOME.AsString            := 'TESTE ' + cdsCadID.AsString;
+    cdsCadNOME_FANTASIA.AsString   := 'TESTE ' + cdsCadID.AsString;
+    cdsCadENDERECO.AsString        := 'RUA ' + cdsCadID.AsString;
+    cdsCadEND_NUMERO.AsString      := cdsCadID.AsString;
+    cdsCadEND_COMPLEMENTO.AsString := 'A';
+    cdsCadBAIRRO.AsString          := 'CENTRO';
+    cdsCadCEP.AsString             := '35500000';
+    cdsCadFK_UF.AsInteger          := 31;
+    cdsCadFK_CIDADE.AsInteger      := 3122306;
+    cdsCadFK_PAIS.AsInteger        := 1058;
+    cdsCadSITE.AsString            := 'www.google.com.br';
+    cdsCadOBS.AsString             := 'TESTE DE OBS '+ cdsCadID.AsString;
+  end;
+
+  if (cdsDetail.State in [dsInsert]) then
+  begin
+    cdsDetailNOME.AsString       := 'CONTATO '+ cdsCadID.AsString;
+    cdsDetailEMAIL.AsString      := 'teste'+ cdsCadID.AsString + '@teste.com';
+    cdsDetailTELEFONE.AsString   := '37991000000';
+  end;
+end;
+
+end.
